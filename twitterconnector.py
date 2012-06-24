@@ -8,18 +8,18 @@ class TwitterConnector( object ):
         self._api = None
 
     def api( self ):
-        if self._api is None:
+        if (self._api is None) and (self.creds_path is not None):
             error = None
             
             try:
-                fh = open( os.path.join( creds_path, 'consumer_token' ), 'r' )
+                fh = open( os.path.join( self.creds_path, 'consumer_token' ), 'r' )
                 consumer_key, consumer_secret = fh.read().split("\n")
                 fh.close()
             except IOError, e:
                 error = e
 
             try: 
-                fh = open( os.path.join( creds_path, 'access_token' ), 'r' )
+                fh = open( os.path.join( self.creds_path, 'access_token' ), 'r' )
                 key, secret = fh.read().split("\n")
                 fh.close()
             except IOError, e:
@@ -37,5 +37,5 @@ class TwitterConnector( object ):
     def tweet( self, status ):
         this_api = self.api()
         if this_api is not None:
-            this_api.update_status( tweet )
+            this_api.update_status( status )
                 
