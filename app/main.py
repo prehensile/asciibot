@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import confighandler
 import oauthclient
 import time
@@ -21,31 +23,35 @@ config = confighandler.ConfigHandler( pth_root=pth_root )
 consumer_token = config.twitter_consumer_token()
 access_token = config.twitter_access_token()
 
-
 # start web UI if enabled
 if config.oauth_enabled():
+    logging.info( "Start oauth interface..." )
     # handler for token save from oauth web UI
-    def save_access_token( access_token, access_token_secret ):
-        config.save_twitter_access_token( token=access_token, secret=access_token_secret )
+    def save_access_token( token, token_secret ):
+        global access_token
+        logging.info( "Token received, saving...")
+        config.save_twitter_access_token( token=token, secret=token_secret )
+        access_token = [ token, token_secret ]
     # init oauth web UI
     oauth = oauthclient.WebInterface( api_key=consumer_token[0],
         api_secret=consumer_token[1], save_token_callback=save_access_token )
     oauth.start()
 
 try:
-    if (access_token is not None) and (consumer_token is not None):
-        connector = twitterconnector.TwitterConnector(
-            consumer_key=consumer_token[0], consumer_secret=consumer_token[1],
-            access_key=access_token[0], access_secret=access_token[1]
-        )
-        ascii = asciibot.AsciiBot()
-
-        # main runloop
-        ## defualt to 3 hours between tweets
-        TWEET_INTERVAL = config.tweet_interval( default_value=10800 )
-        RUNNING = True
-        logging.info( "Enter main runloop..." )
-        while RUNNING:
+    # main runloop
+    ## defualt to 3 hours between tweets
+    TWEET_INTERVAL = config.tweet_interval( default_value=10800 )
+    RUNNING = True
+    logging.info( "Enter main runloop..." )
+    while RUNNING:
+        logging.info( "Main runloop tick...")
+        if (access_token is not None) and (consumer_token is not None):
+            logging.info( "Token set, will tweet..." )
+            connector = twitterconnector.TwitterConnector(
+                consumer_key=consumer_token[0], consumer_secret=consumer_token[1],
+                access_key=access_token[0], access_secret=access_token[1]
+            )
+            ascii = asciibot.AsciiBot()
             tweet = None
             try:
                 tweet = ascii.generate()
@@ -54,10 +60,9 @@ try:
             if tweet:
                 logging.info( tweet )
                 connector.tweet( tweet )
-            time.sleep( TWEET_INTERVAL ) 
-    else:
-        while True:
-            time.sleep(1)
+        else:
+            logging.info( "No token set, doing nothing..." )
+        time.sleep( TWEET_INTERVAL ) 
 except KeyboardInterrupt:
     pass
 

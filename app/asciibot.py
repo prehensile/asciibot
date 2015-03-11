@@ -36,7 +36,6 @@ class AsciiBot( object ):
                 info = response.info()
                 content_type = info[ "Content-type" ]
             except Exception as e:
-                print info
                 logging.info( e )
 
             if response is None:

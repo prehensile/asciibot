@@ -96,15 +96,17 @@ class WebInterface( object ):
         self._save_token_callback = save_token_callback
 
     def start( self ):
+        cherrypy.engine.signal_handler.subscribe()
+        cherrypy.config.update( {'server.socket_host': '0.0.0.0'} )
+        
+        views = InterfaceViews( api_key=self._api_key, api_secret=self._api_secret )
+        views.save_access_token.connect( self._save_token_callback )
+        
         conf = {
              '/': {
                  'tools.sessions.on': True,
-             },
+             }
         }
-        cherrypy.engine.signal_handler.subscribe()
-        cherrypy.config.update( conf )
-        views = InterfaceViews( api_key=self._api_key, api_secret=self._api_secret )
-        views.save_access_token.connect( self._save_token_callback )
         cherrypy.tree.mount( views, "", config=conf )
         cherrypy.engine.start()
 
