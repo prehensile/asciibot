@@ -3,11 +3,11 @@ import random
 import urllib2
 import re
 import logging
-import twitterconnector
+
 
 class AsciiBot( object ):
 
-    def run( self, do_tweet=True, twitter_creds_path=None ):
+    def generate( self ):
 
         root_url = "http://textfiles.com"
         root_paths = [ "100", "adventure", "apple", "bbs",
@@ -30,11 +30,13 @@ class AsciiBot( object ):
                 current_url = "%s/%s" % (root_url,random.choice( root_paths )) 
 
             response = None
+            info = None
             try:
                 response = urllib2.urlopen( current_url )
                 info = response.info()
                 content_type = info[ "Content-type" ]
-            except urllib2.HTTPError, e:
+            except Exception as e:
+                print info
                 logging.info( e )
 
             if response is None:
@@ -83,26 +85,24 @@ class AsciiBot( object ):
                 html = response.read()
                 soup = BeautifulSoup( html )
                 links = soup.find_all( "a" )
-                
                 link = None
                 href = None
-                while href is None:
-                    link = random.choice( links )
-                    href = link.attrs[ "href" ]
-                    # skip links to things not in the current directory
-                    if href.startswith( "http://"):
-                        href = None
-
-                current_file = href 
-                current_url = "%s/%s" % (current_url,href)
+                safety = len(links)
+                if safety > 1: 
+                    while (href is None) and (safety>1):
+                        link = random.choice( links )
+                        href = link.attrs[ "href" ]
+                        # skip links to things not in the current directory
+                        if href.startswith( "http://"):
+                            href = None
+                        safety -= 1
+                    if href is not None:
+                        current_file = href 
+                        current_url = "%s/%s" % (current_url,href)
 
             else:
                 current_url = None
 
             safety -=1
 
-        if tweet is not None:
-            logging.info( tweet )
-            if do_tweet and twitter_creds_path:
-                twitter_connector = twitterconnector.TwitterConnector( twitter_creds_path )
-                twitter_connector.tweet( tweet )
+        return tweet

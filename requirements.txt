@@ -1,0 +1,10 @@
+beautifulsoup4==4.3.2
+CherryPy==3.6.0
+Jinja2==2.7.3
+MarkupSafe==0.23
+morris==1.2
+oauthlib==0.7.2
+requests==2.5.3
+requests-oauthlib==0.4.2
+six==1.9.0
+tweepy==3.3.0
